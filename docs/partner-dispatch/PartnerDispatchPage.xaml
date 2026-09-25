@@ -1,0 +1,196 @@
+<Page x:Class="TestApp.Views.Pages.PartnerDispatchPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      Background="White"
+      Title="ثبت ارسال با همکار"
+      FlowDirection="RightToLeft">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="فرم ثبت ارسال با همکار"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Margin="0,0,0,15"
+                       HorizontalAlignment="Center"/>
+
+            <GroupBox Grid.Row="1" Header="اطلاعات پرونده" Margin="0,0,0,10">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="180"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="تاریخ" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="CreatedDateTextBox" Grid.Column="1" Margin="5" IsReadOnly="True"/>
+                    <TextBlock Grid.Column="2" Text="ساعت" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="CreatedTimeTextBox" Grid.Column="3" Margin="5" IsReadOnly="True"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="2" Header="اطلاعات بارنامه" Margin="0,0,0,10">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="220"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="شماره بارنامه" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="WaybillNumberTextBox"
+                             Grid.Row="0" Grid.Column="1" Margin="5"
+                             KeyDown="WaybillNumberTextBox_KeyDown"
+                             LostFocus="WaybillNumberTextBox_LostFocus"/>
+
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="تاریخ رسید" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="ReceiptDateTextBox" Grid.Row="0" Grid.Column="3" Margin="5" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="فرستنده" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="SenderTextBox" Grid.Row="1" Grid.Column="1" Margin="5" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="گیرنده" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="ReceiverTextBox" Grid.Row="1" Grid.Column="3" Margin="5" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="موبایل گیرنده" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="ReceiverMobileTextBox" Grid.Row="2" Grid.Column="1" Margin="5" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="مقصد" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="DestinationCityTextBox" Grid.Row="2" Grid.Column="3" Margin="5" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="نوع محموله" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="CargoTypeTextBox" Grid.Row="3" Grid.Column="1" Margin="5" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="2" Text="تعداد" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="QuantityTextBox" Grid.Row="3" Grid.Column="3" Margin="5" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="نوع بسته‌بندی" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="PackagingTextBox" Grid.Row="4" Grid.Column="1" Margin="5" IsReadOnly="True"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="کرایه قابل پرداخت" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="PayableTextBox" Grid.Row="4" Grid.Column="3" Margin="5" IsReadOnly="True"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="3" Header="اطلاعات همکار" Margin="0,0,0,10">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="220"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="نام باربری" VerticalAlignment="Center" Margin="5"/>
+                    <ComboBox x:Name="FreightCompanyComboBox"
+                              Grid.Row="0" Grid.Column="1" Margin="5"
+                              IsEditable="True"
+                              IsTextSearchEnabled="True"/>
+
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="شماره رسید همکار" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="PartnerReceiptNumberTextBox" Grid.Row="0" Grid.Column="3" Margin="5"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="تاریخ رسید همکار" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="PartnerReceiptDateTextBox" Grid.Row="1" Grid.Column="1" Margin="5"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="نام متصدی تهران" VerticalAlignment="Center" Margin="5"/>
+                    <ComboBox x:Name="TehranOperatorComboBox"
+                              Grid.Row="1" Grid.Column="3" Margin="5"
+                              IsEditable="True"
+                              IsTextSearchEnabled="True"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="نام تخلیه بار" VerticalAlignment="Center" Margin="5"/>
+                    <ComboBox x:Name="UnloadNameComboBox"
+                              Grid.Row="2" Grid.Column="1" Margin="5"
+                              IsEditable="True"
+                              IsTextSearchEnabled="True"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="موبایل تخلیه بار" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="UnloadMobileTextBox" Grid.Row="2" Grid.Column="3" Margin="5"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="کرایه همکار" VerticalAlignment="Center" Margin="5"/>
+                    <TextBox x:Name="PartnerFreightTextBox"
+                             Grid.Row="3" Grid.Column="1" Margin="5"
+                             LostFocus="MoneyTextBox_LostFocus"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="4" Header="وضعیت" Margin="0,0,0,10">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="200"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="نحوه تسویه" VerticalAlignment="Center" Margin="5"/>
+                    <ComboBox x:Name="SettlementTypeComboBox" Grid.Row="0" Grid.Column="1" Margin="5">
+                        <ComboBoxItem Content="تسویه در محل"/>
+                        <ComboBoxItem Content="تسویه در شرکت"/>
+                        <ComboBoxItem Content="پسکرایه"/>
+                    </ComboBox>
+
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="وضعیت تسویه با همکار" VerticalAlignment="Center" Margin="5"/>
+                    <ComboBox x:Name="SettlementStatusComboBox" Grid.Row="0" Grid.Column="3" Margin="5" SelectedIndex="0">
+                        <ComboBoxItem Content="باز"/>
+                        <ComboBoxItem Content="بسته"/>
+                    </ComboBox>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="وضعیت تحویل به گیرنده" VerticalAlignment="Center" Margin="5"/>
+                    <ComboBox x:Name="DeliveryStatusComboBox" Grid.Row="1" Grid.Column="1" Margin="5" SelectedIndex="0">
+                        <ComboBoxItem Content="تحویل نشده"/>
+                        <ComboBoxItem Content="تحویل شده"/>
+                    </ComboBox>
+
+                    <StackPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Left"
+                                Margin="5,8,0,0">
+                        <Button x:Name="SaveButton"
+                                Content="ذخیره"
+                                Width="120"
+                                Height="35"
+                                Margin="5"
+                                Click="SaveButton_Click"/>
+                        <Button x:Name="ClearButton"
+                                Content="پاک کردن فرم"
+                                Width="120"
+                                Height="35"
+                                Margin="5"
+                                Click="ClearButton_Click"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+        </Grid>
+    </ScrollViewer>
+</Page>

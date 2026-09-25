@@ -1,0 +1,135 @@
+<Page x:Class="TestApp.Views.Pages.PartnerDispatchReportPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      Background="White"
+      Title="گزارش ارسال با همکار"
+      FlowDirection="RightToLeft"
+      Loaded="Page_Loaded">
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="گزارش ارسال با همکار"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   Margin="0,0,0,12"
+                   HorizontalAlignment="Center"/>
+
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="130"/>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="130"/>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="از تاریخ" VerticalAlignment="Center" Margin="4"/>
+            <TextBox x:Name="FromDateTextBox" Grid.Row="0" Grid.Column="1" Margin="4"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="تا تاریخ" VerticalAlignment="Center" Margin="4"/>
+            <TextBox x:Name="ToDateTextBox" Grid.Row="0" Grid.Column="3" Margin="4"/>
+            <TextBlock Grid.Row="0" Grid.Column="4" Text="شهر مقصد" VerticalAlignment="Center" Margin="4"/>
+            <TextBox x:Name="DestinationTextBox" Grid.Row="0" Grid.Column="5" Margin="4"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="متصدی تهران" VerticalAlignment="Center" Margin="4"/>
+            <ComboBox x:Name="TehranOperatorComboBox"
+                      Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                      Margin="4"
+                      IsEditable="True"
+                      IsTextSearchEnabled="True"/>
+            <TextBlock Grid.Row="1" Grid.Column="4" Text="نحوه تسویه" VerticalAlignment="Center" Margin="4"/>
+            <ComboBox x:Name="SettlementTypeComboBox" Grid.Row="1" Grid.Column="5" Margin="4" SelectedIndex="0">
+                <ComboBoxItem Content="همه"/>
+                <ComboBoxItem Content="تسویه در محل"/>
+                <ComboBoxItem Content="تسویه در شرکت"/>
+                <ComboBoxItem Content="پسکرایه"/>
+            </ComboBox>
+
+            <StackPanel Grid.Row="0" Grid.Column="6" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="جستجو" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                <TextBox x:Name="SearchTextBox" Width="180" Margin="4"/>
+                <Button Content="نمایش" Width="90" Height="32" Margin="8,0,0,0" Click="ShowButton_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <DataGrid x:Name="ReportGrid"
+                  Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  IsReadOnly="False"
+                  EnableRowVirtualization="False"
+                  HeadersVisibility="Column"
+                  Margin="0,0,0,10">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="شماره بارنامه" Binding="{Binding WaybillNumber}" IsReadOnly="True" Width="110"/>
+                <DataGridTextColumn Header="تاریخ رسید" Binding="{Binding ReceiptDate}" IsReadOnly="True" Width="100"/>
+                <DataGridTextColumn Header="فرستنده" Binding="{Binding SenderName}" IsReadOnly="True" Width="140"/>
+                <DataGridTextColumn Header="گیرنده" Binding="{Binding ReceiverName}" IsReadOnly="True" Width="140"/>
+                <DataGridTextColumn Header="موبایل گیرنده" Binding="{Binding ReceiverMobile}" IsReadOnly="True" Width="110"/>
+                <DataGridTextColumn Header="مقصد" Binding="{Binding DestinationCity}" IsReadOnly="True" Width="100"/>
+                <DataGridTextColumn Header="نوع محموله" Binding="{Binding CargoType}" IsReadOnly="True" Width="110"/>
+                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity}" IsReadOnly="True" Width="70"/>
+                <DataGridTextColumn Header="نوع بسته‌بندی" Binding="{Binding Packaging}" IsReadOnly="True" Width="140"/>
+                <DataGridTextColumn Header="کرایه قابل پرداخت" Binding="{Binding PayableText}" IsReadOnly="True" Width="120"/>
+                <DataGridTextColumn Header="نام باربری" Binding="{Binding FreightCompanyName}" IsReadOnly="True" Width="130"/>
+                <DataGridTextColumn Header="شماره رسید همکار" Binding="{Binding PartnerReceiptNumber}" IsReadOnly="True" Width="120"/>
+                <DataGridTextColumn Header="تاریخ رسید همکار" Binding="{Binding PartnerReceiptDate}" IsReadOnly="True" Width="120"/>
+                <DataGridTextColumn Header="متصدی تهران" Binding="{Binding TehranOperatorName}" IsReadOnly="True" Width="130"/>
+                <DataGridTextColumn Header="نام تخلیه بار" Binding="{Binding UnloadName}" IsReadOnly="True" Width="120"/>
+                <DataGridTextColumn Header="موبایل تخلیه بار" Binding="{Binding UnloadMobile}" IsReadOnly="True" Width="110"/>
+                <DataGridTextColumn Header="کرایه همکار" Binding="{Binding PartnerFreightText}" IsReadOnly="True" Width="110"/>
+                <DataGridTextColumn Header="نحوه تسویه" Binding="{Binding SettlementType}" IsReadOnly="True" Width="110"/>
+                <DataGridTemplateColumn Header="وضعیت تسویه" Width="110">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox Tag="Settlement"
+                                      Loaded="StatusCombo_Loaded"
+                                      SelectionChanged="StatusCombo_SelectionChanged"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="وضعیت تحویل" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox Tag="Delivery"
+                                      Loaded="StatusCombo_Loaded"
+                                      SelectionChanged="StatusCombo_SelectionChanged"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="160"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="جمع کرایه قابل پرداخت" VerticalAlignment="Center" Margin="4"/>
+            <TextBox x:Name="PayableSumTextBox" Grid.Column="1" Margin="4" IsReadOnly="True"/>
+            <TextBlock Grid.Column="2" Text="جمع کرایه همکار" VerticalAlignment="Center" Margin="4"/>
+            <TextBox x:Name="PartnerSumTextBox" Grid.Column="3" Margin="4" IsReadOnly="True"/>
+            <TextBlock Grid.Column="4" Text="تفاضل" VerticalAlignment="Center" Margin="4"/>
+            <TextBox x:Name="DifferenceTextBox" Grid.Column="5" Margin="4" IsReadOnly="True"/>
+        </Grid>
+    </Grid>
+</Page>
