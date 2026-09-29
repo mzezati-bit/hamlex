@@ -26,6 +26,22 @@ namespace hamlex.Views.Prints.Tests
         }
 
         [Fact]
+        public void MeasurementThatAcceptsEveryRowStillSplitsAfterThirtyTwo()
+        {
+            int perPage = InvoicePagePlanner.KeepOverflowOnLaterPages(39, 39, 32);
+            var pages = InvoicePagePlanner.Plan(39, perPage);
+
+            Assert.Equal(32, perPage);
+            Assert.Equal(new[] { 32, 7 }, pages.Select(p => p.Count).ToArray());
+        }
+
+        [Fact]
+        public void ShortInvoiceIsNotSplitByTheVisibleCap()
+        {
+            Assert.Equal(12, InvoicePagePlanner.KeepOverflowOnLaterPages(12, 12, 32));
+        }
+
+        [Fact]
         public void ThirtyNineRowsAtThirtyTwoPerPagePrintTwoSheets()
         {
             int perPage = InvoicePagePlanner.RowsInSlot(32 * 22, 22);

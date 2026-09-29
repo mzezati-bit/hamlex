@@ -16,6 +16,8 @@ namespace hamlex.Views.Prints
     {
         private const double DesignWidth = 794;
         private const double DesignHeight = 1123;
+        // در این فرم، جای ردیف‌ها بیشتر از ۳۲ ردیف ۲۲پیکسلی را نشان نمی‌دهد.
+        private const int RowsVisibleOnOneSheet = 32;
 
         private string _destination = "";
         private string _agent = "";
@@ -215,9 +217,8 @@ namespace hamlex.Views.Prints
                     bitmaps.Add(SnapshotPage(printWidth, printHeight));
                 }
 
-                var paginator = new InvoiceBitmapPaginator(
-                    bitmaps, new Size(printWidth, printHeight));
-                printDialog.PrintDocument(paginator, "صورتحساب");
+                FixedDocument document = BuildFixedDocument(bitmaps, printWidth, printHeight);
+                printDialog.PrintDocument(document.DocumentPaginator, "صورتحساب");
             }
             finally
             {
@@ -245,11 +246,11 @@ namespace hamlex.Views.Prints
                 int capacity = Math.Min(bySlot, rows.Count);
                 while (capacity > 1 && !LayoutFits(rows, 0, capacity))
                     capacity--;
-                return capacity;
+                return InvoicePagePlanner.KeepOverflowOnLaterPages(capacity, rows.Count, RowsVisibleOnOneSheet);
             }
 
             if (LayoutFits(rows, 0, rows.Count))
-                return rows.Count;
+                return InvoicePagePlanner.KeepOverflowOnLaterPages(rows.Count, rows.Count, RowsVisibleOnOneSheet);
 
             int best = 1;
             int lo = 1;
@@ -279,7 +280,8 @@ namespace hamlex.Views.Prints
                     best++;
             }
 
-            return Math.Max(1, best);
+            return InvoicePagePlanner.KeepOverflowOnLaterPages(
+                Math.Max(1, best), rows.Count, RowsVisibleOnOneSheet);
         }
 
         private double MeasureHostHeight(IList<UIElement> rows, int count)
@@ -404,6 +406,32 @@ namespace hamlex.Views.Prints
             return bitmap;
         }
 
+        private static FixedDocument BuildFixedDocument(IList<ImageSource> bitmaps, double printWidth, double printHeight)
+        {
+            var document = new FixedDocument();
+            document.DocumentPaginator.PageSize = new Size(printWidth, printHeight);
+            foreach (ImageSource bitmap in bitmaps)
+            {
+                var page = new FixedPage
+                {
+                    Width = printWidth,
+                    Height = printHeight,
+                    Background = Brushes.White
+                };
+                var image = new Image
+                {
+                    Source = bitmap,
+                    Width = printWidth,
+                    Height = printHeight
+                };
+                page.Children.Add(image);
+                var content = new PageContent();
+                ((System.Windows.Markup.IAddChild)content).AddChild(page);
+                document.Pages.Add(content);
+            }
+            return document;
+        }
+
         private static string N0(string s)
         {
             if (string.IsNullOrWhiteSpace(s))
@@ -471,6 +499,17 @@ namespace hamlex.Views.Prints
                 Start = start;
                 Count = count;
             }
+        }
+
+        public static int KeepOverflowOnLaterPages(int measuredCapacity, int rowCount, int rowsVisibleOnOneSheet)
+        {
+            if (rowsVisibleOnOneSheet < 1)
+                rowsVisibleOnOneSheet = 1;
+            if (rowCount > rowsVisibleOnOneSheet && measuredCapacity >= rowCount)
+                return rowsVisibleOnOneSheet;
+            if (measuredCapacity < 1)
+                return rowsVisibleOnOneSheet;
+            return measuredCapacity;
         }
 
         public static int RowsInSlot(double slotHeight, double rowHeight)
