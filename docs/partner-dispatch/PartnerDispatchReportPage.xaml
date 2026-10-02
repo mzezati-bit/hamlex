@@ -32,44 +32,70 @@
 
         <Grid Grid.Row="2" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="120"/>
                 <ColumnDefinition Width="130"/>
-                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="120"/>
                 <ColumnDefinition Width="130"/>
-                <ColumnDefinition Width="90"/>
-                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="130"/>
+                <ColumnDefinition Width="170"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Grid.Column="0" Text="از تاریخ" VerticalAlignment="Center" Margin="4"/>
-            <TextBox x:Name="FromDateTextBox" Grid.Row="0" Grid.Column="1" Margin="4"/>
+            <TextBox x:Name="FromDateTextBox"
+                     Grid.Row="0" Grid.Column="1" Margin="4"
+                     FlowDirection="LeftToRight"
+                     HorizontalContentAlignment="Center"/>
             <TextBlock Grid.Row="0" Grid.Column="2" Text="تا تاریخ" VerticalAlignment="Center" Margin="4"/>
-            <TextBox x:Name="ToDateTextBox" Grid.Row="0" Grid.Column="3" Margin="4"/>
-            <TextBlock Grid.Row="0" Grid.Column="4" Text="شهر مقصد" VerticalAlignment="Center" Margin="4"/>
-            <TextBox x:Name="DestinationTextBox" Grid.Row="0" Grid.Column="5" Margin="4"/>
+            <TextBox x:Name="ToDateTextBox"
+                     Grid.Row="0" Grid.Column="3" Margin="4"
+                     FlowDirection="LeftToRight"
+                     HorizontalContentAlignment="Center"/>
+            <TextBlock Grid.Row="0" Grid.Column="4" Text="نوع تاریخ" VerticalAlignment="Center" Margin="4"/>
+            <ComboBox x:Name="DateKindComboBox" Grid.Row="0" Grid.Column="5" Margin="4" SelectedIndex="0">
+                <ComboBoxItem Content="تاریخ رسید"/>
+                <ComboBoxItem Content="تاریخ رسید همکار"/>
+            </ComboBox>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="متصدی تهران" VerticalAlignment="Center" Margin="4"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="شهر مقصد" VerticalAlignment="Center" Margin="4"/>
+            <TextBox x:Name="DestinationTextBox" Grid.Row="1" Grid.Column="1" Margin="4"/>
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="متصدی تهران" VerticalAlignment="Center" Margin="4"/>
             <ComboBox x:Name="TehranOperatorComboBox"
-                      Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                      Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="3"
                       Margin="4"
                       IsEditable="True"
                       IsTextSearchEnabled="True"/>
-            <TextBlock Grid.Row="1" Grid.Column="4" Text="نحوه تسویه" VerticalAlignment="Center" Margin="4"/>
-            <ComboBox x:Name="SettlementTypeComboBox" Grid.Row="1" Grid.Column="5" Margin="4" SelectedIndex="0">
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="نحوه تسویه" VerticalAlignment="Center" Margin="4"/>
+            <ComboBox x:Name="SettlementTypeComboBox" Grid.Row="2" Grid.Column="1" Margin="4" SelectedIndex="0">
                 <ComboBoxItem Content="همه"/>
                 <ComboBoxItem Content="تسویه در محل"/>
                 <ComboBoxItem Content="تسویه در شرکت"/>
                 <ComboBoxItem Content="پسکرایه"/>
             </ComboBox>
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="وضعیت تسویه" VerticalAlignment="Center" Margin="4"/>
+            <ComboBox x:Name="SettlementStatusComboBox" Grid.Row="2" Grid.Column="3" Margin="4" SelectedIndex="0">
+                <ComboBoxItem Content="همه"/>
+                <ComboBoxItem Content="باز"/>
+                <ComboBoxItem Content="بسته"/>
+            </ComboBox>
+            <TextBlock Grid.Row="2" Grid.Column="4" Text="وضعیت تحویل" VerticalAlignment="Center" Margin="4"/>
+            <ComboBox x:Name="DeliveryStatusComboBox" Grid.Row="2" Grid.Column="5" Margin="4" SelectedIndex="0">
+                <ComboBoxItem Content="همه"/>
+                <ComboBoxItem Content="تحویل نشده"/>
+                <ComboBoxItem Content="تحویل شده"/>
+            </ComboBox>
 
-            <StackPanel Grid.Row="0" Grid.Column="6" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Grid.Row="1" Grid.Column="6" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="جستجو" VerticalAlignment="Center" Margin="8,0,4,0"/>
-                <TextBox x:Name="SearchTextBox" Width="180" Margin="4"/>
+                <TextBox x:Name="SearchTextBox" Width="160" Margin="4"/>
                 <Button Content="نمایش" Width="90" Height="32" Margin="8,0,0,0" Click="ShowButton_Click"/>
+                <Button Content="پاکسازی" Width="90" Height="32" Margin="8,0,0,0" Click="ClearFiltersButton_Click"/>
                 <Button Content="ثبت جدید" Width="90" Height="32" Margin="8,0,0,0" Click="NewButton_Click"/>
             </StackPanel>
         </Grid>

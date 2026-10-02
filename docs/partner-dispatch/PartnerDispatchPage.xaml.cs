@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace hamlex.Views.Pages
 {
@@ -21,15 +22,26 @@ namespace hamlex.Views.Pages
         public PartnerDispatchPage()
         {
             InitializeComponent();
+            PersianDateMask.Attach(PartnerReceiptDateTextBox);
             InitializeHeader();
             LoadNameSuggestions();
             ApplyFieldAccess();
+            Loaded += PartnerDispatchPage_Loaded;
         }
 
         public PartnerDispatchPage(string waybillNumber) : this()
         {
             _pendingWaybillNumber = waybillNumber;
             Loaded += PartnerDispatchPage_LoadedForEdit;
+        }
+
+        private void PartnerDispatchPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                WaybillNumberTextBox.Focus();
+                WaybillNumberTextBox.SelectAll();
+            }), DispatcherPriority.Input);
         }
 
         private void PartnerDispatchPage_LoadedForEdit(object sender, RoutedEventArgs e)
@@ -69,6 +81,8 @@ namespace hamlex.Views.Pages
                 return;
 
             LoadWaybillInfo(waybillNo);
+            if (_waybillId > 0)
+                FocusFirstPartnerField();
         }
 
         private void WaybillNumberTextBox_LostFocus(object sender, RoutedEventArgs e)
@@ -176,7 +190,7 @@ namespace hamlex.Views.Pages
                                 _dispatchId = dispatchId;
                                 FreightCompanyComboBox.Text = reader["FreightCompanyName"]?.ToString() ?? "";
                                 PartnerReceiptNumberTextBox.Text = reader["PartnerReceiptNumber"]?.ToString() ?? "";
-                                PartnerReceiptDateTextBox.Text = reader["PartnerReceiptDate"]?.ToString() ?? "";
+                                PersianDateMask.Set(PartnerReceiptDateTextBox, reader["PartnerReceiptDate"]?.ToString());
                                 TehranOperatorComboBox.Text = reader["TehranOperatorName"]?.ToString() ?? "";
                                 UnloadNameComboBox.Text = reader["UnloadName"]?.ToString() ?? "";
                                 UnloadMobileTextBox.Text = reader["UnloadMobile"]?.ToString() ?? "";
@@ -465,6 +479,17 @@ namespace hamlex.Views.Pages
                 return;
             }
 
+            if (!PersianDateMask.TryRead(PartnerReceiptDateTextBox.Text, out DateTime? partnerReceiptDate))
+            {
+                MessageBox.Show(
+                    "تاریخ رسید همکار را کامل کنید یا خالی بگذارید. شکل درست: 1404/01/01",
+                    "خطا",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                PartnerReceiptDateTextBox.Focus();
+                return;
+            }
+
             string settlementType = SettlementTypeComboBox.Text?.Trim() ?? "";
             if (settlementType != "تسویه در محل" && settlementType != "تسویه در شرکت" && settlementType != "پسکرایه")
             {
@@ -544,7 +569,9 @@ namespace hamlex.Views.Pages
                             command.Parameters.AddWithValue("@WaybillId", _waybillId);
                             command.Parameters.AddWithValue("@FreightCompanyName", NullIfEmpty(FreightCompanyComboBox.Text));
                             command.Parameters.AddWithValue("@PartnerReceiptNumber", NullIfEmpty(PartnerReceiptNumberTextBox.Text));
-                            command.Parameters.AddWithValue("@PartnerReceiptDate", NullIfEmpty(PartnerReceiptDateTextBox.Text));
+                            command.Parameters.AddWithValue("@PartnerReceiptDate", partnerReceiptDate.HasValue
+                                ? PersianDateMask.Format(partnerReceiptDate.Value)
+                                : (object)DBNull.Value);
                             command.Parameters.AddWithValue("@TehranOperatorName", NullIfEmpty(TehranOperatorComboBox.Text));
                             command.Parameters.AddWithValue("@UnloadName", NullIfEmpty(UnloadNameComboBox.Text));
                             command.Parameters.AddWithValue("@UnloadMobile", NullIfEmpty(UnloadMobileTextBox.Text));
@@ -575,7 +602,10 @@ namespace hamlex.Views.Pages
 
                         LoadNameSuggestions();
                         if (!isEdit)
+                        {
                             ClearForm();
+                            WaybillNumberTextBox.Focus();
+                        }
                     }
                     catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
                     {
@@ -625,6 +655,22 @@ namespace hamlex.Views.Pages
                 textBox.Text = FormatMoney(textBox.Text);
         }
 
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavigationService == null)
+                return;
+
+            NavigationService.Navigate(new PartnerDispatchReportPage());
+        }
+
+        private void FocusFirstPartnerField()
+        {
+            if (FreightCompanyComboBox.IsEnabled)
+                FreightCompanyComboBox.Focus();
+            else
+                SettlementStatusComboBox.Focus();
+        }
+
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show(
@@ -647,6 +693,7 @@ namespace hamlex.Views.Pages
             ClearWaybillFields();
             ClearPartnerFields();
             ApplyFieldAccess();
+            WaybillNumberTextBox.Focus();
         }
 
         private void ClearWaybillFields()
@@ -667,7 +714,7 @@ namespace hamlex.Views.Pages
         {
             FreightCompanyComboBox.Text = "";
             PartnerReceiptNumberTextBox.Text = "";
-            PartnerReceiptDateTextBox.Text = "";
+            PersianDateMask.Set(PartnerReceiptDateTextBox, "");
             TehranOperatorComboBox.Text = "";
             UnloadNameComboBox.Text = "";
             UnloadMobileTextBox.Text = "";
@@ -675,6 +722,285 @@ namespace hamlex.Views.Pages
             SettlementTypeComboBox.SelectedIndex = -1;
             SettlementStatusComboBox.SelectedIndex = 0;
             DeliveryStatusComboBox.SelectedIndex = 0;
+        }
+    }
+
+    internal static class PersianDateMask
+    {
+        public const string Empty = "____/__/__";
+        private static readonly int[] Slots = { 0, 1, 2, 3, 5, 6, 8, 9 };
+
+        public static void Attach(TextBox box)
+        {
+            box.FlowDirection = FlowDirection.LeftToRight;
+            box.Text = Empty;
+            box.PreviewTextInput += Box_PreviewTextInput;
+            box.PreviewKeyDown += Box_PreviewKeyDown;
+            DataObject.AddPastingHandler(box, Box_Pasting);
+            box.PreviewMouseUp += Box_PreviewMouseUp;
+            box.LostFocus += Box_LostFocus;
+        }
+
+        public static void Set(TextBox box, string stored)
+        {
+            box.Text = ToMask(stored);
+        }
+
+        public static string Format(DateTime date)
+        {
+            var calendar = new PersianCalendar();
+            return calendar.GetYear(date).ToString("0000")
+                + "/"
+                + calendar.GetMonth(date).ToString("00")
+                + "/"
+                + calendar.GetDayOfMonth(date).ToString("00");
+        }
+
+        public static bool TryRead(string text, out DateTime? date)
+        {
+            date = null;
+            if (IsEmpty(text))
+                return true;
+
+            if (!TryParse(text, out DateTime value))
+                return false;
+
+            date = value;
+            return true;
+        }
+
+        public static string ToMask(string text)
+        {
+            text = (text ?? "").Trim();
+            if (text.Length == 0 || IsEmpty(text))
+                return Empty;
+
+            var parts = text.Split('/');
+            if (parts.Length == 3
+                && int.TryParse(parts[0], out int year)
+                && int.TryParse(parts[1], out int month)
+                && int.TryParse(parts[2], out int day))
+                return year.ToString("0000") + "/" + month.ToString("00") + "/" + day.ToString("00");
+
+            return PlaceDigits(text);
+        }
+
+        private static void Box_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = true;
+            if (!(sender is TextBox box))
+                return;
+
+            char? digit = ToEnglishDigit(e.Text);
+            if (digit.HasValue)
+                InsertDigit(box, digit.Value);
+        }
+
+        private static void Box_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!(sender is TextBox box))
+                return;
+
+            if (e.Key == Key.Back)
+            {
+                e.Handled = true;
+                ClearSlot(box, PreviousSlot(box.CaretIndex));
+                return;
+            }
+
+            if (e.Key == Key.Delete)
+            {
+                e.Handled = true;
+                int slot = SlotAtOrAfter(box.CaretIndex);
+                if (slot >= 0 && slot < 10)
+                    ClearSlot(box, slot);
+                return;
+            }
+
+            if (e.Key == Key.Left)
+            {
+                e.Handled = true;
+                int slot = PreviousSlot(box.CaretIndex);
+                box.CaretIndex = slot < 0 ? 0 : slot;
+                return;
+            }
+
+            if (e.Key == Key.Right)
+            {
+                e.Handled = true;
+                int slot = SlotAtOrAfter(box.CaretIndex + 1);
+                box.CaretIndex = slot < 0 ? 10 : slot;
+            }
+        }
+
+        private static void Box_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            e.CancelCommand();
+            if (!(sender is TextBox box))
+                return;
+            if (!e.DataObject.GetDataPresent(DataFormats.Text))
+                return;
+
+            string pasted = e.DataObject.GetData(DataFormats.Text) as string;
+            box.Text = ToMask(pasted);
+            box.CaretIndex = 10;
+        }
+
+        private static void Box_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox box)
+                box.Text = ToMask(box.Text);
+        }
+
+        private static void Box_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!(sender is TextBox box))
+                return;
+
+            box.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                int slot = SlotAtOrAfter(box.CaretIndex);
+                if (slot >= 0)
+                    box.CaretIndex = slot;
+            }), DispatcherPriority.Input);
+        }
+
+        private static void InsertDigit(TextBox box, char digit)
+        {
+            if (box.SelectionLength > 0)
+            {
+                box.Text = Empty;
+                box.CaretIndex = 0;
+            }
+
+            var chars = ToMask(box.Text).ToCharArray();
+            int slot = SlotAtOrAfter(box.CaretIndex);
+            if (slot < 0)
+                return;
+
+            chars[slot] = digit;
+            box.Text = new string(chars);
+            int next = SlotAtOrAfter(slot + 1);
+            box.CaretIndex = next < 0 ? 10 : next;
+        }
+
+        private static void ClearSlot(TextBox box, int slot)
+        {
+            if (slot < 0)
+            {
+                box.CaretIndex = 0;
+                return;
+            }
+
+            var chars = ToMask(box.Text).ToCharArray();
+            chars[slot] = '_';
+            box.Text = new string(chars);
+            box.CaretIndex = slot;
+        }
+
+        private static string PlaceDigits(string text)
+        {
+            var chars = Empty.ToCharArray();
+            int slot = 0;
+            if (text != null)
+            {
+                for (int i = 0; i < text.Length && slot < Slots.Length; i++)
+                {
+                    char? digit = ToEnglishDigit(text[i].ToString());
+                    if (digit.HasValue)
+                        chars[Slots[slot++]] = digit.Value;
+                }
+            }
+
+            return new string(chars);
+        }
+
+        private static bool IsEmpty(string text)
+        {
+            text = ToRaw(text);
+            for (int i = 0; i < Slots.Length; i++)
+            {
+                int index = Slots[i];
+                if (index < text.Length && text[index] != '_')
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static string ToRaw(string text)
+        {
+            if (string.IsNullOrEmpty(text) || text.Length != 10 || text[4] != '/' || text[7] != '/')
+                return Empty;
+            return text;
+        }
+
+        private static bool TryParse(string text, out DateTime date)
+        {
+            date = DateTime.MinValue;
+            string mask = ToMask(text);
+            if (IsEmpty(mask))
+                return false;
+
+            for (int i = 0; i < Slots.Length; i++)
+            {
+                if (mask[Slots[i]] == '_')
+                    return false;
+            }
+
+            if (!int.TryParse(mask.Substring(0, 4), out int year)
+                || !int.TryParse(mask.Substring(5, 2), out int month)
+                || !int.TryParse(mask.Substring(8, 2), out int day))
+                return false;
+
+            try
+            {
+                var calendar = new PersianCalendar();
+                date = calendar.ToDateTime(year, month, day, 0, 0, 0, 0);
+                return true;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return false;
+            }
+        }
+
+        private static int SlotAtOrAfter(int index)
+        {
+            for (int i = 0; i < Slots.Length; i++)
+            {
+                if (Slots[i] >= index)
+                    return Slots[i];
+            }
+
+            return -1;
+        }
+
+        private static int PreviousSlot(int caretIndex)
+        {
+            int found = -1;
+            for (int i = 0; i < Slots.Length; i++)
+            {
+                if (Slots[i] < caretIndex)
+                    found = Slots[i];
+            }
+
+            return found;
+        }
+
+        private static char? ToEnglishDigit(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            char c = text[0];
+            if (c >= '0' && c <= '9')
+                return c;
+            if (c >= '۰' && c <= '۹')
+                return (char)('0' + (c - '۰'));
+            if (c >= '٠' && c <= '٩')
+                return (char)('0' + (c - '٠'));
+            return null;
         }
     }
 }

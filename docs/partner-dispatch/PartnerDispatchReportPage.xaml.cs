@@ -16,6 +16,8 @@ namespace hamlex.Views.Pages
         public PartnerDispatchReportPage()
         {
             InitializeComponent();
+            PersianDateMask.Attach(FromDateTextBox);
+            PersianDateMask.Attach(ToDateTextBox);
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -26,6 +28,20 @@ namespace hamlex.Views.Pages
 
         private void ShowButton_Click(object sender, RoutedEventArgs e)
         {
+            LoadReport();
+        }
+
+        private void ClearFiltersButton_Click(object sender, RoutedEventArgs e)
+        {
+            PersianDateMask.Set(FromDateTextBox, "");
+            PersianDateMask.Set(ToDateTextBox, "");
+            DestinationTextBox.Text = "";
+            TehranOperatorComboBox.Text = "";
+            DateKindComboBox.SelectedIndex = 0;
+            SettlementTypeComboBox.SelectedIndex = 0;
+            SettlementStatusComboBox.SelectedIndex = 0;
+            DeliveryStatusComboBox.SelectedIndex = 0;
+            SearchTextBox.Text = "";
             LoadReport();
         }
 
@@ -93,14 +109,30 @@ namespace hamlex.Views.Pages
 
         private void LoadReport()
         {
-            if (!TryGetPersianDate(FromDateTextBox, "از تاریخ", out DateTime? fromDate))
+            if (!PersianDateMask.TryRead(FromDateTextBox.Text, out DateTime? fromDate))
+            {
+                MessageBox.Show("تاریخ «از تاریخ» معتبر نیست. شکل درست: 1404/01/01");
+                FromDateTextBox.Focus();
                 return;
-            if (!TryGetPersianDate(ToDateTextBox, "تا تاریخ", out DateTime? toDate))
-                return;
+            }
 
-            string settlementType = (SettlementTypeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "همه";
-            if (settlementType == "همه")
-                settlementType = "";
+            if (!PersianDateMask.TryRead(ToDateTextBox.Text, out DateTime? toDate))
+            {
+                MessageBox.Show("تاریخ «تا تاریخ» معتبر نیست. شکل درست: 1404/01/01");
+                ToDateTextBox.Focus();
+                return;
+            }
+
+            if (fromDate.HasValue && toDate.HasValue && fromDate.Value.Date > toDate.Value.Date)
+            {
+                MessageBox.Show("تاریخ شروع نباید بعد از تاریخ پایان باشد.");
+                return;
+            }
+
+            string settlementType = SelectedFilter(SettlementTypeComboBox);
+            string settlementStatus = SelectedFilter(SettlementStatusComboBox);
+            string deliveryStatus = SelectedFilter(DeliveryStatusComboBox);
+            bool filterPartnerReceiptDate = DateKindComboBox.SelectedIndex == 1;
 
             var rows = new List<PartnerReportRow>();
             try
@@ -165,11 +197,11 @@ namespace hamlex.Views.Pages
                         LEFT JOIN dbo.Contacts R ON W.ReceiverId = R.Id
                         LEFT JOIN dbo.Cities C ON W.DestinationId = C.Id
                         LEFT JOIN dbo.CargoTypes CT ON W.CargoTypeId = CT.Id
-                        WHERE (@FromDate IS NULL OR W.CreatedAt >= @FromDate)
-                          AND (@ToDateExclusive IS NULL OR W.CreatedAt < @ToDateExclusive)
-                          AND (@Dest = N'' OR ISNULL(C.CityName, N'') LIKE @Dest)
+                        WHERE (@Dest = N'' OR ISNULL(C.CityName, N'') LIKE @Dest)
                           AND (@Operator = N'' OR ISNULL(Pd.TehranOperatorName, N'') = @Operator)
                           AND (@SettlementType = N'' OR Pd.SettlementType = @SettlementType)
+                          AND (@SettlementStatus = N'' OR ISNULL(NULLIF(LTRIM(RTRIM(Pd.SettlementStatus)), N''), N'باز') = @SettlementStatus)
+                          AND (@DeliveryStatus = N'' OR ISNULL(NULLIF(LTRIM(RTRIM(Pd.DeliveryStatus)), N''), N'تحویل نشده') = @DeliveryStatus)
                           AND (
                                 @Search = N''
                                 OR ISNULL(W.WaybillNumber, N'') LIKE @Search
@@ -188,23 +220,23 @@ namespace hamlex.Views.Pages
                         string dest = (DestinationTextBox.Text ?? "").Trim();
                         string op = (TehranOperatorComboBox.Text ?? "").Trim();
 
-                        command.Parameters.AddWithValue("@FromDate", (object)fromDate ?? DBNull.Value);
-                        command.Parameters.AddWithValue("@ToDateExclusive", toDate.HasValue ? toDate.Value.Date.AddDays(1) : (object)DBNull.Value);
                         command.Parameters.AddWithValue("@Dest", dest.Length == 0 ? "" : "%" + dest + "%");
                         command.Parameters.AddWithValue("@Operator", op);
                         command.Parameters.AddWithValue("@SettlementType", settlementType);
+                        command.Parameters.AddWithValue("@SettlementStatus", settlementStatus);
+                        command.Parameters.AddWithValue("@DeliveryStatus", deliveryStatus);
                         command.Parameters.AddWithValue("@Search", search.Length == 0 ? "" : "%" + search + "%");
 
                         using (var reader = command.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                string settlementStatus = reader["SettlementStatus"]?.ToString();
-                                if (settlementStatus != "باز" && settlementStatus != "بسته")
-                                    settlementStatus = "باز";
-                                string deliveryStatus = reader["DeliveryStatus"]?.ToString();
-                                if (deliveryStatus != "تحویل نشده" && deliveryStatus != "تحویل شده")
-                                    deliveryStatus = "تحویل نشده";
+                                string rowSettlementStatus = reader["SettlementStatus"]?.ToString();
+                                if (rowSettlementStatus != "باز" && rowSettlementStatus != "بسته")
+                                    rowSettlementStatus = "باز";
+                                string rowDeliveryStatus = reader["DeliveryStatus"]?.ToString();
+                                if (rowDeliveryStatus != "تحویل نشده" && rowDeliveryStatus != "تحویل شده")
+                                    rowDeliveryStatus = "تحویل نشده";
 
                                 rows.Add(new PartnerReportRow
                                 {
@@ -226,14 +258,15 @@ namespace hamlex.Views.Pages
                                     UnloadMobile = reader["UnloadMobile"]?.ToString() ?? "",
                                     PartnerFreight = reader["PartnerFreight"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["PartnerFreight"]),
                                     SettlementType = reader["SettlementType"]?.ToString() ?? "",
-                                    SettlementStatus = settlementStatus,
-                                    DeliveryStatus = deliveryStatus
+                                    SettlementStatus = rowSettlementStatus,
+                                    DeliveryStatus = rowDeliveryStatus
                                 });
                             }
                         }
                     }
                 }
 
+                rows = FilterByChosenDate(rows, filterPartnerReceiptDate, fromDate, toDate);
                 ReportGrid.ItemsSource = rows;
                 UpdateTotals(rows);
             }
@@ -316,34 +349,35 @@ namespace hamlex.Views.Pages
             }
         }
 
-        private static bool TryGetPersianDate(TextBox box, string title, out DateTime? date)
+        private static string SelectedFilter(ComboBox box)
         {
-            date = null;
-            string text = (box.Text ?? "").Trim();
-            if (text.Length == 0)
-                return true;
+            string text = (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
+            return text == "همه" ? "" : text;
+        }
 
-            var parts = text.Split('/');
-            if (parts.Length != 3
-                || !int.TryParse(parts[0], out int year)
-                || !int.TryParse(parts[1], out int month)
-                || !int.TryParse(parts[2], out int day))
+        private static List<PartnerReportRow> FilterByChosenDate(
+            List<PartnerReportRow> rows,
+            bool partnerReceiptDate,
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            if (!fromDate.HasValue && !toDate.HasValue)
+                return rows;
+
+            var filtered = new List<PartnerReportRow>();
+            for (int i = 0; i < rows.Count; i++)
             {
-                MessageBox.Show("تاریخ «" + title + "» معتبر نیست. شکل درست: 1404/01/01");
-                return false;
+                string value = partnerReceiptDate ? rows[i].PartnerReceiptDate : rows[i].ReceiptDate;
+                if (!PersianDateMask.TryRead(PersianDateMask.ToMask(value), out DateTime? rowDate) || !rowDate.HasValue)
+                    continue;
+                if (fromDate.HasValue && rowDate.Value.Date < fromDate.Value.Date)
+                    continue;
+                if (toDate.HasValue && rowDate.Value.Date > toDate.Value.Date)
+                    continue;
+                filtered.Add(rows[i]);
             }
 
-            try
-            {
-                var pc = new PersianCalendar();
-                date = pc.ToDateTime(year, month, day, 0, 0, 0, 0);
-                return true;
-            }
-            catch
-            {
-                MessageBox.Show("تاریخ «" + title + "» معتبر نیست.");
-                return false;
-            }
+            return filtered;
         }
 
         public sealed class PartnerReportRow
