@@ -37,6 +37,8 @@ public string ReceiverMobile { get; set; }
 
 ## ۴. بارگذاری گزارش
 
+اگر داخل متن SQL این را می‌بینید، همان باعث خطای `Invalid column name ' + senderMobileSql` شده است. آن خط‌ها را پاک کنید. متغیر باید بیرون از رشته بماند و فقط نتیجه‌اش داخل دستور جایگزین شود.
+
 در `LoadReport`، بلافاصله بعد از `conn.Open()`:
 
 ```csharp
@@ -44,33 +46,25 @@ string senderMobileSql = ContactMobileSql(conn, "S", "SenderMobile");
 string receiverMobileSql = ContactMobileSql(conn, "R", "ReceiverMobile");
 ```
 
-در همان دستور، این قطعه:
+شروع دستور را از `new SqlCommand(@"` به `string reportSql = @"` عوض کنید. انتهای همان رشته، قبل از `, conn)`، فقط با `";` بسته شود. بعد از رشته این سه خط را بگذارید:
+
+```csharp
+reportSql = reportSql.Replace("/*SENDER_MOBILE*/", senderMobileSql);
+reportSql = reportSql.Replace("/*RECEIVER_MOBILE*/", receiverMobileSql);
+using var cmd = new SqlCommand(reportSql, conn);
+```
+
+داخل خود رشته، بعد از نام فرستنده و نام گیرنده فقط این نشانه‌ها باشند:
 
 ```csharp
         END AS SenderName,
+        /*SENDER_MOBILE*/,
         CASE
 ```
 
-با این عوض شود:
-
-```csharp
-        END AS SenderName,
-" + senderMobileSql + @",
-        CASE
-```
-
-و این قطعه:
-
 ```csharp
         END AS ReceiverName,
-        W.ReceiverCode,
-```
-
-با این عوض شود:
-
-```csharp
-        END AS ReceiverName,
-" + receiverMobileSql + @",
+        /*RECEIVER_MOBILE*/,
         W.ReceiverCode,
 ```
 
@@ -132,19 +126,25 @@ Csv("موبایل فرستنده"),
 Csv("موبایل گیرنده")));
 ```
 
-در `ExcelButton_Click` هم بلافاصله بعد از `conn.Open()` همان دو خط `senderMobileSql` و `receiverMobileSql` را بگذارید.
+در `ExcelButton_Click` هم بلافاصله بعد از `conn.Open()` همان دو خط `senderMobileSql` و `receiverMobileSql` را بگذارید. شروع دستور خروجی را از `new SqlCommand($@"` به `string exportSql = $@"` عوض کنید و ته رشته را با `";` ببندید. چون این دستور `$` دارد، `IN ({string.Join(",", ids)})` سر جایش می‌ماند. بعد از رشته:
 
-در دستور خروجی، همان دو قطعهٔ `END AS SenderName` و `END AS ReceiverName` را مثل `LoadReport` بشکنید. فقط چون این دستور از قبل `$` دارد، قطعهٔ دوم را با `$` ببندید تا `IN ({string.Join...})` خراب نشود:
+```csharp
+exportSql = exportSql.Replace("/*SENDER_MOBILE*/", senderMobileSql);
+exportSql = exportSql.Replace("/*RECEIVER_MOBILE*/", receiverMobileSql);
+using var cmd = new SqlCommand(exportSql, conn);
+```
+
+داخل همان رشته هم فقط این نشانه‌ها باشند، نه نام متغیر:
 
 ```csharp
         END AS SenderName,
-" + senderMobileSql + @",
+        /*SENDER_MOBILE*/,
         CASE
 ```
 
 ```csharp
         END AS ReceiverName,
-" + receiverMobileSql + $@",
+        /*RECEIVER_MOBILE*/,
         W.ReceiverCode,
 ```
 
