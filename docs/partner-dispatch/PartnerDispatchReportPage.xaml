@@ -100,14 +100,19 @@
             </StackPanel>
         </Grid>
 
+        <ScrollViewer Grid.Row="3"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled"
+                      Margin="0,0,0,10">
         <DataGrid x:Name="ReportGrid"
-                  Grid.Row="3"
+                  HorizontalAlignment="Left"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   IsReadOnly="True"
                   HeadersVisibility="Column"
-                  MouseDoubleClick="ReportGrid_MouseDoubleClick"
-                  Margin="0,0,0,10">
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  MouseDoubleClick="ReportGrid_MouseDoubleClick">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="شماره بارنامه" Binding="{Binding WaybillNumber}" Width="110"/>
                 <DataGridTextColumn Header="تاریخ رسید" Binding="{Binding ReceiptDate}" Width="100"/>
@@ -131,6 +136,7 @@
                 <DataGridTextColumn Header="وضعیت تحویل" Binding="{Binding DeliveryStatus}" Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
+        </ScrollViewer>
 
         <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
