@@ -29,6 +29,24 @@ namespace hamlex.Views.Pages
             LoadReport();
         }
 
+        private void NewButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!hamlex.Services.CurrentUserSession.HasPermission("PartnerDispatch.Create"))
+            {
+                MessageBox.Show(
+                    "شما دسترسی ثبت ارسال با همکار را ندارید.",
+                    "عدم دسترسی",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (NavigationService == null)
+                return;
+
+            NavigationService.Navigate(new PartnerDispatchPage());
+        }
+
         private void ReportGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (!(ReportGrid.SelectedItem is PartnerReportRow row))

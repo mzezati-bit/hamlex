@@ -10,6 +10,6 @@
 
 برای گزارش، در ویژوال استودیو یک صفحهٔ WPF به نام `PartnerDispatchReportPage` بسازید. کلاسش باید `hamlex.Views.Pages.PartnerDispatchReportPage` باشد. بعد متن `PartnerDispatchReportPage.xaml` و `PartnerDispatchReportPage.xaml.cs` را کامل جایگزین کنید. این صفحه را به عنوان آیتم تکراری اضافه نکنید.
 
-در `MainWindow.xaml` کنار دکمهٔ ثبت، دکمهٔ گزارش را بگذارید. در کد، مجوز دکمهٔ ثبت `PartnerDispatch.Create` و مجوز دکمهٔ گزارش `PartnerDispatch.View` است.
+در منوی اصلی فقط یک دکمه بماند: گزارش ارسال با همکار، با مجوز `PartnerDispatch.View`. ثبت ردیف جدید دکمهٔ «ثبت جدید» داخل همین گزارش است و مجوزش `PartnerDispatch.Create` است. از مجوز مرجوعی استفاده نکنید.
 
 تاریخ گزارش اگر خالی باشد، همهٔ ردیف‌های همکار می‌آیند. دوبل‌کلیک یک ردیف، فرم همان بارنامه را باز می‌کند.

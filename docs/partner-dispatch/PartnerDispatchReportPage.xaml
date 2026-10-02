@@ -70,6 +70,7 @@
                 <TextBlock Text="جستجو" VerticalAlignment="Center" Margin="8,0,4,0"/>
                 <TextBox x:Name="SearchTextBox" Width="180" Margin="4"/>
                 <Button Content="نمایش" Width="90" Height="32" Margin="8,0,0,0" Click="ShowButton_Click"/>
+                <Button Content="ثبت جدید" Width="90" Height="32" Margin="8,0,0,0" Click="NewButton_Click"/>
             </StackPanel>
         </Grid>
 
