@@ -505,10 +505,14 @@ namespace hamlex.Views.Prints
         {
             if (rowsVisibleOnOneSheet < 1)
                 rowsVisibleOnOneSheet = 1;
-            if (rowCount > rowsVisibleOnOneSheet && measuredCapacity >= rowCount)
-                return rowsVisibleOnOneSheet;
             if (measuredCapacity < 1)
                 return rowsVisibleOnOneSheet;
+
+            // جای ردیف‌ها روی برگ فقط ۳۲ ردیف را نشان می‌دهد. اگر اندازه‌گیری ۴۲ برگرداند،
+            // ردیف‌های ۳۳ تا ۴۲ روی همان برگ بریده می‌شوند و برگ بعد از ۴۳ شروع می‌شود.
+            if (rowCount > rowsVisibleOnOneSheet && measuredCapacity > rowsVisibleOnOneSheet)
+                return rowsVisibleOnOneSheet;
+
             return measuredCapacity;
         }
 

@@ -42,6 +42,29 @@ namespace hamlex.Views.Prints.Tests
         }
 
         [Fact]
+        public void MeasurementOfFortyTwoDoesNotSkipTheNextTenRows()
+        {
+            int perPage = InvoicePagePlanner.KeepOverflowOnLaterPages(42, 50, 32);
+            var pages = InvoicePagePlanner.Plan(50, perPage);
+
+            Assert.Equal(32, perPage);
+            Assert.Equal(new[] { 32, 18 }, pages.Select(p => p.Count).ToArray());
+            Assert.Equal(32, pages[1].Start);
+            Assert.Equal(Enumerable.Range(0, 50), pages.SelectMany(Cover));
+        }
+
+        [Fact]
+        public void SeventyFourRowsPrintThreeSheetsWithoutAGap()
+        {
+            int perPage = InvoicePagePlanner.KeepOverflowOnLaterPages(42, 74, 32);
+            var pages = InvoicePagePlanner.Plan(74, perPage);
+
+            Assert.Equal(new[] { 32, 32, 10 }, pages.Select(p => p.Count).ToArray());
+            Assert.Equal(new[] { 0, 32, 64 }, pages.Select(p => p.Start).ToArray());
+            Assert.Equal(Enumerable.Range(0, 74), pages.SelectMany(Cover));
+        }
+
+        [Fact]
         public void ThirtyNineRowsAtThirtyTwoPerPagePrintTwoSheets()
         {
             int perPage = InvoicePagePlanner.RowsInSlot(32 * 22, 22);
