@@ -96,7 +96,6 @@
                 <TextBlock Text="جستجو" VerticalAlignment="Center" Margin="8,0,4,0"/>
                 <TextBox x:Name="SearchTextBox" Width="160" Margin="4"/>
                 <Button Content="نمایش" Width="90" Height="32" Margin="8,0,0,0" Click="ShowButton_Click"/>
-                <Button Content="پاکسازی" Width="90" Height="32" Margin="8,0,0,0" Click="ClearFiltersButton_Click"/>
             </StackPanel>
         </Grid>
 
@@ -151,12 +150,19 @@
             <TextBox x:Name="DifferenceTextBox" Grid.Column="5" Margin="4" IsReadOnly="True"/>
         </Grid>
 
-        <Button Grid.Row="5"
-                Content="ثبت جدید"
-                Width="120"
-                Height="36"
-                HorizontalAlignment="Right"
-                Margin="0,8,4,0"
-                Click="NewButton_Click"/>
+        <StackPanel Grid.Row="5"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,4,0">
+            <Button Content="ثبت جدید"
+                    Width="120"
+                    Height="36"
+                    Click="NewButton_Click"/>
+            <Button Content="پاکسازی"
+                    Width="120"
+                    Height="36"
+                    Margin="0,0,8,0"
+                    Click="ClearFiltersButton_Click"/>
+        </StackPanel>
     </Grid>
 </Page>
