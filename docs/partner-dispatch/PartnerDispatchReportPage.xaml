@@ -16,6 +16,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0"
@@ -96,23 +97,19 @@
                 <TextBox x:Name="SearchTextBox" Width="160" Margin="4"/>
                 <Button Content="نمایش" Width="90" Height="32" Margin="8,0,0,0" Click="ShowButton_Click"/>
                 <Button Content="پاکسازی" Width="90" Height="32" Margin="8,0,0,0" Click="ClearFiltersButton_Click"/>
-                <Button Content="ثبت جدید" Width="90" Height="32" Margin="8,0,0,0" Click="NewButton_Click"/>
             </StackPanel>
         </Grid>
 
-        <ScrollViewer Grid.Row="3"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Disabled"
-                      Margin="0,0,0,10">
         <DataGrid x:Name="ReportGrid"
-                  HorizontalAlignment="Left"
+                  Grid.Row="3"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   IsReadOnly="True"
                   HeadersVisibility="Column"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
                   ScrollViewer.VerticalScrollBarVisibility="Auto"
-                  MouseDoubleClick="ReportGrid_MouseDoubleClick">
+                  MouseDoubleClick="ReportGrid_MouseDoubleClick"
+                  Margin="0,0,0,10">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="شماره بارنامه" Binding="{Binding WaybillNumber}" Width="110"/>
                 <DataGridTextColumn Header="تاریخ رسید" Binding="{Binding ReceiptDate}" Width="100"/>
@@ -136,7 +133,6 @@
                 <DataGridTextColumn Header="وضعیت تحویل" Binding="{Binding DeliveryStatus}" Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
-        </ScrollViewer>
 
         <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
@@ -154,5 +150,13 @@
             <TextBlock Grid.Column="4" Text="تفاضل" VerticalAlignment="Center" Margin="4"/>
             <TextBox x:Name="DifferenceTextBox" Grid.Column="5" Margin="4" IsReadOnly="True"/>
         </Grid>
+
+        <Button Grid.Row="5"
+                Content="ثبت جدید"
+                Width="120"
+                Height="36"
+                HorizontalAlignment="Right"
+                Margin="0,8,4,0"
+                Click="NewButton_Click"/>
     </Grid>
 </Page>
